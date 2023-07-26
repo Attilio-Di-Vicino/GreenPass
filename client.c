@@ -5,13 +5,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ctype.h>
-
-#define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 12345
-#define CODE_LENGTH 16
+#include "addresses.h"
 
 int main( int argc, char* argv[] ) {
 
@@ -47,14 +45,14 @@ int main( int argc, char* argv[] ) {
 
     // Controllo se la creazione della socket è andata a buon fine
     if ( socketDescriptor == -1 ) {
-        printf( "\nErrore durante la creazione della socket client\n", argv[0] );
+        printf( "\nErrore durante la creazione della socket client\n" );
         exit( EXIT_FAILURE );
     }
 
     // Impostazione degli indirizzi del server
     address.sin_family = AF_INET; // Dominio
-    address.sin_port = htons( SERVER_PORT ); // Host to network
-    inet_pton( AF_INET, SERVER_IP, &address.sin_addr ); // Text to binary
+    address.sin_port = htons( CENTER_PORT ); // Host to network
+    inet_pton( AF_INET, LOCAL_HOST, &address.sin_addr ); // Text to binary
 
     // Impostazione degli indirizzi del server
     // struct sockaddr_in address;
