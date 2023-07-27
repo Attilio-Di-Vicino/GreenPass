@@ -16,6 +16,8 @@
 
 #define CODE_LENGTH 16
 
+// e operazioni su questa variabile sono eseguite in modo atomico e
+// non vengono ottimizzate dal compilatore
 volatile sig_atomic_t run = 1;
 
 void handler( int );
@@ -104,6 +106,14 @@ int main() {
     return 0;
 }
 
+/**
+ * Gestore del segnale SIGINT
+ * in linea generale il gestore dovrebbe avere
+ * poche istruzioni per evitare problemi di race condiction
+ * run è di tipo volatile sig_atomic_t.
+ * 
+ * @param signo segnale
+*/
 void handler( int signo ) {
     run = 0;
 }
