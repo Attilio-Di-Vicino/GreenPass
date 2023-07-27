@@ -13,6 +13,8 @@
 #include "addresses.h"
 #include <signal.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 #define CODE_LENGTH 16
 
@@ -33,12 +35,12 @@ int main() {
     sigaction( SIGINT, &newAction, NULL );
 
     // Descrittore del file socket
-    int socketDescriptor;
-    int clientDescriptor;
+    int sockfd;
+    int connfd;
     // Struttura degli indirizzi
-    struct sockaddr_in address;
-    struct sockaddr_in clientAddress;
-    socklen_t clientAddressLength;
+    struct sockaddr_in servaddr;
+    struct sockaddr_in clientaddr;
+    socklen_t clientaddrLength;
     // Codice tessera sanitaria
     char code[ CODE_LENGTH ];
     // Risposta dal centro vaccinale
@@ -46,63 +48,77 @@ int main() {
 
     // Creazione socket utilizzata per comunicare con il centro vaccinale
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
-    socketDescriptor = socket( AF_INET, SOCK_STREAM, 0 );
+    sockfd = socket( AF_INET, SOCK_STREAM, 0 );
 
     // Controllo se la creazione della socket è andata a buon fine
-    if ( socketDescriptor == -1 ) {
+    if ( sockfd == -1 ) {
         printf( "\nErrore durante la creazione della socket centro vaccinale\n" );
         exit( EXIT_FAILURE );
     }
 
     // Impostazione degli indirizzi del server
-    address.sin_family = AF_INET; // Dominio
-    address.sin_port = htons( CENTER_PORT ); // Host to network
-    inet_pton( AF_INET, LOCAL_HOST, &address.sin_addr ); // Text to binary
+    servaddr.sin_family = AF_INET; // Dominio
+    inet_pton( AF_INET, LOCAL_HOST, &servaddr.sin_addr ); // Text to binary
+    servaddr.sin_port = htons( CENTER_PORT ); // Host to network
 
-    // 
-    if ( bind( socketDescriptor, ( struct sockaddr* ) &address, sizeof( address ) ) == -1 ) {
+    // Assegnazione indirizzo locale alla socket
+    if ( bind( sockfd, ( struct sockaddr* ) &servaddr, sizeof( servaddr ) ) == -1 ) {
         perror( "Errore binding del socket del centro vaccinale" );
+        close( sockfd );
         exit( EXIT_FAILURE );
     }
 
-    //
-    if ( listen( socketDescriptor, SOMAXCONN ) == -1 ) {
+    // Mette in ascolto un socket TCP per le connessioni in entrata
+    if ( listen( sockfd, SOMAXCONN ) == -1 ) {
         perror( "Errore listening del centro vaccinale" );
+        close( sockfd );
         exit( EXIT_FAILURE );
     }
 
     while ( run ) {
+
         // Accettazione della connessione da un client
-        clientAddressLength = sizeof( clientAddress );
-        clientDescriptor = accept( socketDescriptor, 
-                            ( struct sockaddr* ) &clientAddress, &clientAddressLength );
-        if ( clientDescriptor < 0 ) {
+        clientaddrLength = sizeof( clientaddr );
+        connfd = accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
+
+        // Controllo run
+        if ( !run ) {
+            perror( "\nTerminazione centro vaccinale con successo" );
+            exit( EXIT_SUCCESS );
+        }
+
+        if ( connfd < 0 ) {
             perror( "Errore nell'accettare la connessione" );
-            close( socketDescriptor );
+            close( sockfd );
             exit( EXIT_FAILURE );
         }
 
         // Gestione della connessione con il client
         // Ricevo il codice dal client
-        if ( recv( clientDescriptor, &code, sizeof( code ), 0 ) < 0 ) {
+        if ( recv( connfd, &code, sizeof( code ), 0 ) < 0 ) {
             perror( "\nErrore durante la ricezione della risposta dal centro vaccinale" );
+            close( sockfd );
+            close( connfd );
             exit( EXIT_FAILURE );
         }
 
         response = 1;
+        printf( "\nRichiesta client gestita risultato: %d\n", response );
 
         // Invio la risposta
-        if ( send( clientDescriptor, &response, sizeof( response ), 0) < 0 ) {
+        if ( send( connfd, &response, sizeof( response ), 0) < 0 ) {
             perror( "\nErrore durante l'invio del codice al centro vaccinale" );
+            close( sockfd );
+            close( connfd );
             exit( EXIT_FAILURE );
         }
 
         // Chiude il socket del client dopo aver finito di comunicare con esso
-        close( clientDescriptor );
+        close( connfd );
     }
 
     // Chiude il socket del server prima di uscire
-    close( socketDescriptor );
+    close( sockfd );
     return 0;
 }
 
