@@ -11,7 +11,8 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "addresses.h"
+#include "service/addresses.h"
+#include "service/functions.h"
 
 #define CODE_LENGTH 16
 
@@ -45,13 +46,7 @@ int main( int argc, char* argv[] ) {
 
     // Creazione socket utilizzata per comunicare con il centro vaccinale
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
-    sockfd = socket( AF_INET, SOCK_STREAM, 0 );
-
-    // Controllo se la creazione della socket è andata a buon fine
-    if ( sockfd == -1 ) {
-        printf( "\nErrore durante la creazione della socket client\n" );
-        exit( EXIT_FAILURE );
-    }
+    sockfd = Socket( AF_INET, SOCK_STREAM, 0 );
 
     // Impostazione degli indirizzi del server
     address.sin_family = AF_INET; // Dominio
@@ -59,25 +54,13 @@ int main( int argc, char* argv[] ) {
     address.sin_port = htons( CENTER_PORT ); // Host to network
 
     // Stabilisco una connessione con il server
-    if ( connect( sockfd, ( struct sockaddr* ) &address, sizeof( address ) ) < 0 ) {
-        perror( "\nErrore durante la connessione al server" );
-        close( sockfd );
-        exit( EXIT_FAILURE );
-    }
+    Connect( sockfd, ( struct sockaddr* ) &address, sizeof( address ) );
 
-    // Invio il codice attraverso la send
-    if ( send( sockfd, &code, sizeof( code ), 0 ) < 0 ) {
-        perror( "\nErrore durante l'invio del codice al centro vaccinale" );
-        close( sockfd );
-        exit( EXIT_FAILURE );
-    }
+    // Invio il codice attraverso la FullWrite
+    ssize_t nleftW = FullWrite( sockfd, &code, sizeof( code ) );
 
-    // Risposta da parte del centro vaccinale utilizzando recv
-    if ( recv( sockfd, &response, sizeof( response ), 0 ) < 0 ) {
-        perror( "\nErrore durante la ricezione della risposta dal centro vaccinale" );
-        close( sockfd );
-        exit( EXIT_FAILURE );
-    }
+    // Risposta da parte del centro vaccinale utilizzando FullRead
+    ssize_t nleftR = FullRead( sockfd, &response, sizeof( response ) );
 
     // Controllo validità green pass
     if ( response )

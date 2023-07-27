@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "addresses.h"
+#include "service/addresses.h"
+#include "service/functions.h"
 #include <signal.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -48,13 +49,7 @@ int main() {
 
     // Creazione socket utilizzata per comunicare con il centro vaccinale
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
-    sockfd = socket( AF_INET, SOCK_STREAM, 0 );
-
-    // Controllo se la creazione della socket è andata a buon fine
-    if ( sockfd == -1 ) {
-        printf( "\nErrore durante la creazione della socket centro vaccinale\n" );
-        exit( EXIT_FAILURE );
-    }
+    sockfd = Socket( AF_INET, SOCK_STREAM, 0 );
 
     // Impostazione degli indirizzi del server
     servaddr.sin_family = AF_INET; // Dominio
@@ -62,56 +57,25 @@ int main() {
     servaddr.sin_port = htons( CENTER_PORT ); // Host to network
 
     // Assegnazione indirizzo locale alla socket
-    if ( bind( sockfd, ( struct sockaddr* ) &servaddr, sizeof( servaddr ) ) == -1 ) {
-        perror( "Errore binding del socket del centro vaccinale" );
-        close( sockfd );
-        exit( EXIT_FAILURE );
-    }
+    Bind( sockfd, ( struct sockaddr* ) &servaddr, sizeof( servaddr ) );
 
     // Mette in ascolto un socket TCP per le connessioni in entrata
-    if ( listen( sockfd, SOMAXCONN ) == -1 ) {
-        perror( "Errore listening del centro vaccinale" );
-        close( sockfd );
-        exit( EXIT_FAILURE );
-    }
+    Listen( sockfd, SOMAXCONN );
 
     while ( run ) {
 
         // Accettazione della connessione da un client
         clientaddrLength = sizeof( clientaddr );
-        connfd = accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
-
-        // Controllo run
-        if ( !run ) {
-            perror( "\nTerminazione centro vaccinale con successo" );
-            exit( EXIT_SUCCESS );
-        }
-
-        if ( connfd < 0 ) {
-            perror( "Errore nell'accettare la connessione" );
-            close( sockfd );
-            exit( EXIT_FAILURE );
-        }
-
-        // Gestione della connessione con il client
+        connfd = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
+        
         // Ricevo il codice dal client
-        if ( recv( connfd, &code, sizeof( code ), 0 ) < 0 ) {
-            perror( "\nErrore durante la ricezione della risposta dal centro vaccinale" );
-            close( sockfd );
-            close( connfd );
-            exit( EXIT_FAILURE );
-        }
+        ssize_t nleftR = FullRead( connfd, &code, sizeof( code ) );
 
         response = 1;
         printf( "\nRichiesta client gestita risultato: %d\n", response );
 
         // Invio la risposta
-        if ( send( connfd, &response, sizeof( response ), 0) < 0 ) {
-            perror( "\nErrore durante l'invio del codice al centro vaccinale" );
-            close( sockfd );
-            close( connfd );
-            exit( EXIT_FAILURE );
-        }
+        ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) );
 
         // Chiude il socket del client dopo aver finito di comunicare con esso
         close( connfd );

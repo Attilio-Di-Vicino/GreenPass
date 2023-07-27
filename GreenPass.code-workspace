@@ -7,7 +7,8 @@
 	"settings": {
 		"files.associations": {
 			"stdio.h": "c",
-			"socket.h": "c"
+			"socket.h": "c",
+			"addresses.h": "c"
 		}
 	}
 }
