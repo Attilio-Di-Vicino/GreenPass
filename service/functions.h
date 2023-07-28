@@ -12,6 +12,8 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/select.h>
+#include "green_pass.h"
 
 /**
  * Funzione wrapper per la creazione di una socket
@@ -89,6 +91,25 @@ int Accept( int sockfd, struct sockaddr *addr, socklen_t *addrlen ) {
 }
 
 /**
+ * Funzione wrapper per la chiamata di sistema select().
+ * 
+ * @param nfds: Numero massimo dei file descriptor da controllare + 1.
+ * @param readfds: Puntatore a un insieme di socket in lettura da monitorare.
+ * @param writefds: Puntatore a un insieme di socket in scrittura da monitorare.
+ * @param exceptfds: Puntatore a un insieme di socket in errore da monitorare.
+ * @param timeout: Puntatore a una struttura timeval che rappresenta il tempo massimo di attesa per l'evento.
+ * @return nready: Numero di file descriptor pronti per la lettura, scrittura o in errore. -1 in caso di errore.
+ */
+int Select( int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout ) {
+    int nready;
+    if ( ( nready = select( nfds, readfds, writefds, exceptfds, timeout ) ) < 0 ) {
+        perror( "\nErrore nella select" );
+        exit( EXIT_FAILURE );
+    }
+    return nready;
+}
+
+/**
  * Funzione per scrivere l'intero contenuto di un buffer in un file descriptor
  * 
  * @param fd: Descrittore del file descriptor nel quale scrivere i dati
@@ -143,4 +164,21 @@ ssize_t FullRead( int fd, void *buf, size_t count ) {
     }
     buf = 0;
     return nleft;
+}
+
+GreenPass createGreenPass( const char code[] ) {
+    GreenPass newGreenPass;
+
+    // Copia il codice fornito nella struttura GreenPass
+    strncpy( newGreenPass.code, code, CODE_LENGTH - 1 );
+    newGreenPass.code[ CODE_LENGTH - 1 ] = '\0'; // Assicurati di terminare correttamente la stringa
+
+    // Imposta la data di validità da adesso fino a 6 mesi dopo
+    newGreenPass.valid_from = time( NULL );
+    newGreenPass.valid_until = newGreenPass.valid_from + VALIDITY_PERIOD;
+
+    //
+    newGreenPass.service = 1;
+
+    return newGreenPass;
 }

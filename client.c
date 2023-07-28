@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include "service/addresses.h"
 #include "service/functions.h"
+#include "service/green_pass.h"
 
 #define CODE_LENGTH 16
 
@@ -32,7 +33,7 @@ int main( int argc, char* argv[] ) {
     // Codice tessera sanitaria
     char code[ CODE_LENGTH ];
     // Risposta dal centro vaccinale
-    int response;
+    GreenPass myGreenPass;
 
     // Copia la tessera sanitaria passata come argomento nel nostro array
     strncpy( code, argv[1], sizeof( code ) - 1 );
@@ -42,7 +43,7 @@ int main( int argc, char* argv[] ) {
     for ( int i = 0; code[i]; i++ ) {
         code[i] = toupper( code[i] );
     }
-    printf( "\nTessera Sanitaria Cliente: %s\n", code );
+    printf( "\nTessera Sanitaria CF: %s in fase di accettazione...\n", code );
 
     // Creazione socket utilizzata per comunicare con il centro vaccinale
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
@@ -60,13 +61,17 @@ int main( int argc, char* argv[] ) {
     ssize_t nleftW = FullWrite( sockfd, &code, sizeof( code ) );
 
     // Risposta da parte del centro vaccinale utilizzando FullRead
-    ssize_t nleftR = FullRead( sockfd, &response, sizeof( response ) );
+    ssize_t nleftR = FullRead( sockfd, &myGreenPass, sizeof( myGreenPass ) );
 
-    // Controllo validità green pass
-    if ( response )
-        printf( "\nIl Green Pass risulta essere VALIDO!\n" );
-    else
-        printf( "\nIl Green Pass risulta essere NON VALIDO!\n" );
+    // Green pass
+    if ( myGreenPass.service ) {
+        printf( "\nAccettazione avvenuta con successo green pass:" );
+        printf( "\nCodice Fiscale: %s", myGreenPass.code );
+        printf( "\nData inizio: %s", ctime( &myGreenPass.valid_from ) );
+        printf( "Data fine: %s", ctime( &myGreenPass.valid_until ) );
+    } else {
+        printf( "\nAccettazione fallita." );
+    }
 
     // Chiusura descrittore
     close( sockfd );

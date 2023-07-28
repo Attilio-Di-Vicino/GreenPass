@@ -12,10 +12,12 @@
 #include <netinet/in.h>
 #include "service/addresses.h"
 #include "service/functions.h"
+#include "service/green_pass.h"
 #include <signal.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/select.h>
 
 #define CODE_LENGTH 16
 
@@ -62,23 +64,69 @@ int main() {
     // Mette in ascolto un socket TCP per le connessioni in entrata
     Listen( sockfd, SOMAXCONN );
 
+    // FD_SET
+    fd_set readSet;
+    FD_ZERO( &readSet );
+    int i, fd_connection, fd_open[ FD_SETSIZE ] = {0};
+    int fd_ready = 0;
+    ssize_t nread = 0;
+    int maxfd = 0;
+
+    fd_open[ sockfd ]++;
+    maxfd = sockfd;
+
+    printf( "\n---- CENTRO VACCINALE IN ASCOLTO ----\n" );
+
     while ( run ) {
 
-        // Accettazione della connessione da un client
-        clientaddrLength = sizeof( clientaddr );
-        connfd = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
+        for ( i = sockfd; i <= maxfd; i++ )
+            if ( fd_open[i] != 0 )
+                FD_SET( i, &readSet );
         
-        // Ricevo il codice dal client
-        ssize_t nleftR = FullRead( connfd, &code, sizeof( code ) );
+        // Monitoro i file descriptor ed n è il numero di fd pronti
+        fd_ready = Select( maxfd + 1, &readSet, NULL, NULL, NULL );
 
-        response = 1;
-        printf( "\nRichiesta client gestita risultato: %d\n", response );
+        if ( FD_ISSET( sockfd, &readSet ) ) {
+            fd_ready--;
+            // Accettazione della connessione da un client
+            fd_connection = Accept( sockfd, NULL, NULL );
+            printf( "\nConnessione stabilita con %d...", fd_connection );
+            fd_open[ fd_connection ] = 1;
+            if ( maxfd < fd_connection )
+                maxfd = fd_connection;
+        }
 
-        // Invio la risposta
-        ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) );
+        i = sockfd;
 
-        // Chiude il socket del client dopo aver finito di comunicare con esso
-        close( connfd );
+        while ( fd_ready != 0 ) {
+            
+            i++;
+            if ( fd_open[i] == 0 )
+                continue;
+
+            if ( FD_ISSET( i, &readSet ) ) {
+                fd_ready--;
+                // Ricevo il codice dal client
+                nread = FullRead( i, &code, sizeof( code ) );
+                if ( nread < 0 )
+                    perror( "\nErrore nella lettura" );
+                if ( nread == 0 ) {
+                    fd_open[i] = 0;
+                    if ( maxfd == i ) {
+                        while ( fd_open[ --i ] == 0 );
+                        maxfd = i;
+                        break;
+                    }
+                }
+            }
+
+            sleep( 2 );
+            GreenPass newClientPass = createGreenPass( code );
+            printf( "\nRichiesta client gestita risultato: %d\n", newClientPass.service );
+
+            // Invio la risposta
+            ssize_t nleftW = FullWrite( i, &newClientPass, sizeof( newClientPass ) );
+        }
     }
 
     // Chiude il socket del server prima di uscire
