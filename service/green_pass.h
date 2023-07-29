@@ -2,16 +2,29 @@
 #define GREEN_PASS_H
 
 #include <time.h>
+#include "todo.h"
 
 #define CODE_LENGTH 17
 #define VALIDITY_PERIOD ( 6 * 30 * 24 * 60 * 60 )
+#define MAX_NUM_OF_GREEN_PASS 120
+#define FLASE 0
+#define TRUE 1
 
 typedef struct green_pass {
     char code[ CODE_LENGTH ];
     time_t valid_from;
     time_t valid_until;
     int validity;
+    char toCheck[3];
 } GreenPass;
+
+// Green Pass presenti
+GreenPass allGreenPass[ MAX_NUM_OF_GREEN_PASS ];
+static int count = 0;
+
+int getSizeAllGreenPass() {
+    return count;
+}
 
 /**
  * Funzione per generare Green Pass nuovo
@@ -31,17 +44,16 @@ GreenPass createGreenPass( const char code[] ) {
     newGreenPass.valid_until = newGreenPass.valid_from + VALIDITY_PERIOD;
 
     // validity TRUE
-    newGreenPass.validity = 1;
+    newGreenPass.validity = TRUE;
+    strncpy( newGreenPass.toCheck, OTHER, 3 );
 
     return newGreenPass;
 }
 
 /**
- * Funzione per inizializzazione Green Pass
- * 
- * @param allGreenPass: Array Green Pass
+ * Procedura per inizializzazione Green Pass
  */
-void initAllGreenPass( GreenPass allGreenPass[] ) {
+void initAllGreenPass() {
     // Vengono utilizzati 2 Green Pass di esempio
 
     // Alessio Esposito
@@ -53,7 +65,8 @@ void initAllGreenPass( GreenPass allGreenPass[] ) {
     allGreenPass[0].valid_until = allGreenPass[0].valid_from + VALIDITY_PERIOD;
 
     // validity TRUE
-    allGreenPass[0].validity = 1;
+    allGreenPass[0].validity = TRUE;
+    strncpy( allGreenPass[0].toCheck, OTHER, 3 );
 
     // Angela Esposito
     strncpy( allGreenPass[1].code, "SPSNGL01A41F839D", CODE_LENGTH );
@@ -64,36 +77,67 @@ void initAllGreenPass( GreenPass allGreenPass[] ) {
     allGreenPass[1].valid_until = allGreenPass[1].valid_from + VALIDITY_PERIOD;
 
     // validity TRUE
-    allGreenPass[1].validity = 1;
-}
+    allGreenPass[1].validity = TRUE;
+    strncpy( allGreenPass[1].toCheck, OTHER, 3 );
 
-/**
- * Funzione per aggiungere Green Pass
- * 
- * @param allGreenPass: Array Green Pass
- * @param newGreenPass: Green Pass da aggiungere
- * @param N: Size di allGreenPass
- */
-void addGreenPass( GreenPass allGreenPass[], GreenPass newGreenPass, const int N ) {
-    strncpy( allGreenPass[0].code, newGreenPass.code, CODE_LENGTH );
-    allGreenPass[0].code[ CODE_LENGTH ] = '\0'; // Assicurati di terminare correttamente la stringa
+    // Attilio Di Vicino
+    strncpy( allGreenPass[2].code, "DVCTTL97T30F839P", CODE_LENGTH );
+    allGreenPass[2].code[ CODE_LENGTH ] = '\0'; // Assicurati di terminare correttamente la stringa
 
     // Imposta la data di validità da adesso fino a 6 mesi dopo
-    allGreenPass[0].valid_from = newGreenPass.valid_from;
-    allGreenPass[0].valid_until = newGreenPass.valid_until;
+    allGreenPass[2].valid_from = time( NULL );
+    allGreenPass[2].valid_until = allGreenPass[1].valid_from + VALIDITY_PERIOD;
 
     // validity TRUE
-    allGreenPass[0].validity = newGreenPass.validity;
+    allGreenPass[2].validity = TRUE;
+    strncpy( allGreenPass[2].toCheck, OTHER, 3 );
+    count = 3;
 }
 
 /**
- * Funzione per stampare Green Pass
+ * Procedura per aggiungere Green Pass
  * 
- * @param allGreenPass: Array Green Pass
- * @param N: Size di allGreenPass
+ * @param newGreenPass: Green Pass da aggiungere
  */
-void printAllGreenPass( GreenPass allGreenPass[], const int N ) {
-    for ( int i = 0; i < N; i++ ) {
+void addGreenPass( GreenPass newGreenPass ) {
+    strncpy( allGreenPass[ count ].code, newGreenPass.code, CODE_LENGTH );
+    allGreenPass[ count ].code[ CODE_LENGTH ] = '\0'; // Assicurati di terminare correttamente la stringa
+
+    // Imposta la data di validità da adesso fino a 6 mesi dopo
+    allGreenPass[ count ].valid_from = newGreenPass.valid_from;
+    allGreenPass[ count ].valid_until = newGreenPass.valid_until;
+
+    // validity TRUE
+    allGreenPass[ count ].validity = newGreenPass.validity;
+    strncpy( allGreenPass[ count++ ].toCheck, OTHER, 3 );
+}
+
+/**
+ * Funzione controllo validità codice fiscale
+ * 
+ * @param greenPass: Green Pass da verificare
+ * @return validità del green pass
+ */
+int checkValidity( char code[] ) {
+    for ( int i = 0; i < count; i++ )
+        if ( strcmp( code, allGreenPass[i].code ) == 0 )
+            return allGreenPass[i].validity;
+    return FLASE;
+}
+
+void changeValidity( char code[], int chval ) {
+    for ( int i = 0; i < count; i++ )
+        if ( strcmp( code, allGreenPass[i].code ) == 0 ) {
+            allGreenPass[i].validity = chval;
+            break;
+        }
+} 
+
+/**
+ * Procedura per stampare Green Pass
+ */
+void printAllGreenPass() {
+    for ( int i = 0; i < count; i++ ) {
         printf( "\nCodice Fiscale: %s", allGreenPass[i].code );
         printf( "\nData inizio: %s", ctime( &allGreenPass[i].valid_from ) );
         printf( "Data fine: %s", ctime( &allGreenPass[i].valid_until ) );

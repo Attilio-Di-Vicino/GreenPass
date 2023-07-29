@@ -1,10 +1,11 @@
 /**
- * Il centro vaccinale comunica al ServerV il codice ricevuto
- * dal client ed il periodo di validità del green pass.
- * 
  * Un ClientS, per verificare se un green pass è valido,
  * invia il codice di una tessera sanitaria al ServerG il
  * quale richiede al ServerV il controllo della validità.
+ * 
+ * Un ClientT, inoltre, può invalidare o ripristinare la validità
+ * di un green pass comunicando al ServerG il contagio o la guarigione
+ * di una persona attraverso il codice della tessera sanitaria.
 */
 
 #include <stdio.h>
@@ -14,9 +15,11 @@
 #include "service/addresses.h"
 #include "service/functions.h"
 #include "service/green_pass.h"
+#include "service/todo.h"
 #include <signal.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
 
@@ -38,20 +41,20 @@ int main() {
 
     // Descrittore del file socket
     int sockfd;
-    int centerfd, connfd;
+    int connfd;
     // Struttura degli indirizzi
     struct sockaddr_in servaddr;
     struct sockaddr_in clientaddr;
     socklen_t clientaddrLength = sizeof( clientaddr );
-    struct sockaddr_in centeraddr;
-    socklen_t centeraddrLength = sizeof( centeraddr );
-    // Nuovo GreenPass
-    GreenPass newGreenPass;
+    // Messaggio ricevuto
+    todo todoHandle;
     // Risposta dal centro vaccinale
     int response;
 
-    initAllGreenPass();
-    printAllGreenPass();
+    // Descrittore del file socket server V
+    int sockfdSV;
+    // Struttura degli indirizzi server V
+    struct sockaddr_in addressSV;
 
     // Creazione socket utilizzata per comunicare con il centro vaccinale
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
@@ -60,7 +63,7 @@ int main() {
     // Impostazione degli indirizzi del server
     servaddr.sin_family = AF_INET; // Dominio
     inet_pton( AF_INET, LOCAL_HOST, &servaddr.sin_addr ); // Text to binary
-    servaddr.sin_port = htons( SERVERV_PORT ); // Host to network
+    servaddr.sin_port = htons( SERVERG_PORT ); // Host to network
 
     // Da valutare
     int optval = 1;
@@ -75,7 +78,7 @@ int main() {
     // Mette in ascolto un socket TCP per le connessioni in entrata
     Listen( sockfd, SOMAXCONN );
 
-    printf( "\n---- SERVER V IN ASCOLTO ----\n" );
+    printf( "\n---- SERVER G IN ASCOLTO ----\n" );
 
     while ( run ) {
 
@@ -83,32 +86,41 @@ int main() {
         connfd = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
 
         // Ricevo il newGreenPass dal centro vaccinale
-        ssize_t nread = FullRead( connfd, &newGreenPass, sizeof( newGreenPass ) );
+        ssize_t nread = FullRead( connfd, &todoHandle, sizeof( todoHandle ) );
+        GreenPass greenPass = createGreenPass( todoHandle.code );
 
-        if ( strcmp( newGreenPass.toCheck, OTHER ) == 0 ) {
-            // Green pass
-            printf( "\nGreen Pass ricevuto con successo green pass:" );
-            printf( "\nCodice Fiscale: %s", newGreenPass.code );
-            printf( "\nData inizio: %s", ctime( &newGreenPass.valid_from ) );
-            printf( "Data fine: %s", ctime( &newGreenPass.valid_until ) );
-            response = 1; // Simulazione
-            addGreenPass( newGreenPass );
-            printf( "Green Pass Totali: %d\n", getSizeAllGreenPass() );
+        // Connesione con il serverV
+        printf( "\n----------- CONNESSIONE SERVER V ------------\n" );
+        // Creazione socket utilizzata per comunicare con il centro vaccinale
+        // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
+        sockfdSV = Socket( AF_INET, SOCK_STREAM, 0 );
+
+        // Impostazione degli indirizzi del server
+        addressSV.sin_family = AF_INET; // Dominio
+        inet_pton( AF_INET, LOCAL_HOST, &addressSV.sin_addr ); // Text to binary
+        addressSV.sin_port = htons( SERVERV_PORT ); // Host to network
+
+        // Stabilisco una connessione con il server
+        Connect( sockfdSV, ( struct sockaddr* ) &addressSV, sizeof( addressSV ) );
+
+        if ( strcmp( todoHandle.todo, INVALIDATE ) == 0 ) {
+            // Invalidazione
+            strncpy( greenPass.toCheck, INVALIDATE, 3 );
+        } else if ( strcmp( todoHandle.todo, RESTORE ) == 0 ) {
+            // Restore
+            strncpy( greenPass.toCheck, RESTORE, 3 );
         } else {
-            // Controlla
-            if ( strcmp( newGreenPass.toCheck, INVALIDATE ) == 0 ) {
-                // Invalidazione
-                changeValidity( newGreenPass.code, FLASE );
-                response = TRUE;
-            } else if ( strcmp( newGreenPass.toCheck, RESTORE ) == 0 ) {
-                // Restore
-                changeValidity( newGreenPass.code, TRUE );
-                response = TRUE;
-            } else {
-                // Is valid
-                response = checkValidity( newGreenPass.code );
-            }
+            // Is valid
+            strncpy( greenPass.toCheck, ISVALID, 3 );
         }
+
+        // Invio il codice attraverso la FullWrite
+        ssize_t nleftW = FullWrite( sockfdSV, &greenPass, sizeof( greenPass ) );
+        response = 0;
+        // Risposta da parte del centro vaccinale utilizzando FullRead
+        ssize_t nleftR = FullRead( sockfdSV, &response, sizeof( response ) );
+        close( sockfdSV );
+        printf( "\n----------- CONNESSIONE CHIUSA V ------------\n" );
 
         // Invio la risposta
         ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) );
@@ -117,6 +129,7 @@ int main() {
 
     // Chiude il socket del server prima di uscire
     close( sockfd );
+    printf( "\n" );
     return 0;
 }
 
