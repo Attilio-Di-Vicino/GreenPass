@@ -26,6 +26,8 @@ int main( int argc, char* argv[] ) {
         exit( EXIT_FAILURE );
     }
 
+    printf( "\n---- BENVENUTO CLIENT ----\n" );
+
     // Descrittore del file socket
     int sockfd;
     // Struttura degli indirizzi
@@ -75,6 +77,9 @@ int main( int argc, char* argv[] ) {
 
     // Chiusura descrittore
     close( sockfd );
+
+    printf( "\n-------- TUTTE LE OPERAZIONI --------\n" );
+    printf( "---- SONO AVVENUTE CON SUCCESSO! ----\n" );
 
     printf( "\n" );
     return 0;
