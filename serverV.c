@@ -95,6 +95,8 @@ int main() {
             addGreenPass( newGreenPass );
             printf( "Green Pass Totali: %d\n", getSizeAllGreenPass() );
         } else {
+            printf( "\nGestione richiesta dal server G..." );
+            printf( "\nOperazione conclusa.\n" );
             // Controlla
             if ( strcmp( newGreenPass.toCheck, INVALIDATE ) == 0 ) {
                 // Invalidazione
@@ -111,8 +113,8 @@ int main() {
         }
 
         // Invio la risposta
-        ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) );
-        close( connfd );   
+        ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) ); 
+        close( connfd );
     }
 
     // Chiude il socket del server prima di uscire

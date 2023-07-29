@@ -106,12 +106,15 @@ int main() {
         if ( strcmp( todoHandle.todo, INVALIDATE ) == 0 ) {
             // Invalidazione
             strncpy( greenPass.toCheck, INVALIDATE, 3 );
+            printf( "Cambio di validità FALSE..." );
         } else if ( strcmp( todoHandle.todo, RESTORE ) == 0 ) {
             // Restore
             strncpy( greenPass.toCheck, RESTORE, 3 );
+            printf( "Cambio di validità TRUE..." );
         } else {
             // Is valid
             strncpy( greenPass.toCheck, ISVALID, 3 );
+            printf( "Verifica in corso..." );
         }
 
         // Invio il codice attraverso la FullWrite
@@ -120,10 +123,11 @@ int main() {
         // Risposta da parte del centro vaccinale utilizzando FullRead
         ssize_t nleftR = FullRead( sockfdSV, &response, sizeof( response ) );
         close( sockfdSV );
+        printf( "\nOperazione conclusa." );
         printf( "\n----------- CONNESSIONE CHIUSA V ------------\n" );
 
         // Invio la risposta
-        ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) );
+        nleftW = FullWrite( connfd, &response, sizeof( response ) );
         close( connfd );   
     }
 

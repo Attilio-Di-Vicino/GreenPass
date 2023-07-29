@@ -47,7 +47,6 @@ int main( int argc, char* argv[] ) {
     }
     printf( "\nTessera Sanitaria CF: %s in verifica di validità...\n", todoHandle.code );
     strncpy( todoHandle.todo, ISVALID, 3 );
-    printf( "\nTODO: %s", todoHandle.todo );
 
     // Creazione socket utilizzata per comunicare con il server
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
