@@ -58,6 +58,13 @@ int main() {
     inet_pton( AF_INET, LOCAL_HOST, &servaddr.sin_addr ); // Text to binary
     servaddr.sin_port = htons( CENTER_PORT ); // Host to network
 
+    // Da valutare
+    int optval = 1;
+    if ( setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof( optval ) ) < 0) {
+        perror( "setsockopt" );
+        exit( EXIT_FAILURE );
+    }
+
     // Assegnazione indirizzo locale alla socket
     Bind( sockfd, ( struct sockaddr* ) &servaddr, sizeof( servaddr ) );
 
@@ -120,7 +127,7 @@ int main() {
                 }
             }
 
-            sleep( 2 );
+            sleep( 1 );
             GreenPass newClientPass = createGreenPass( code );
             printf( "\nRichiesta client gestita risultato: %d\n", newClientPass.service );
 

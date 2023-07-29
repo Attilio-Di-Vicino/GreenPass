@@ -36,8 +36,8 @@ int main( int argc, char* argv[] ) {
     GreenPass myGreenPass;
 
     // Copia la tessera sanitaria passata come argomento nel nostro array
-    strncpy( code, argv[1], sizeof( code ) - 1 );
-    code[ sizeof( code ) - 1 ] = '\0'; // Assicura che la stringa sia terminata correttamente
+    strncpy( code, argv[1], CODE_LENGTH - 1 );
+    code[ CODE_LENGTH - 1 ] = '\0'; // Assicura che la stringa sia terminata correttamente
 
     // Conversione caratteri del codice della tessera sanitaria in maiuscolo
     for ( int i = 0; code[i]; i++ ) {

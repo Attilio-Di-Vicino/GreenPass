@@ -156,7 +156,7 @@ ssize_t FullRead( int fd, void *buf, size_t count ) {
         else
             return nread;
         
-        if( nread == 0 )
+        if ( nread == 0 )
             break;
         
         nleft -= nread;
@@ -166,6 +166,12 @@ ssize_t FullRead( int fd, void *buf, size_t count ) {
     return nleft;
 }
 
+/**
+ * Funzione per generare Green Pass nuovo
+ * 
+ * @param code: Codice fiscale cliente
+ * @return newGreenPass: Nuovo Green Pass
+ */
 GreenPass createGreenPass( const char code[] ) {
     GreenPass newGreenPass;
 
@@ -177,7 +183,7 @@ GreenPass createGreenPass( const char code[] ) {
     newGreenPass.valid_from = time( NULL );
     newGreenPass.valid_until = newGreenPass.valid_from + VALIDITY_PERIOD;
 
-    //
+    // Service TRUE
     newGreenPass.service = 1;
 
     return newGreenPass;
