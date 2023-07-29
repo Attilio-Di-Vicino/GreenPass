@@ -49,6 +49,11 @@ int main() {
     // Risposta dal centro vaccinale
     int response;
 
+    // Descrittore del file socket
+    int sockfdSV;
+    // Struttura degli indirizzi
+    struct sockaddr_in addressSV;
+
     // Creazione socket utilizzata per comunicare con il centro vaccinale
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
     sockfd = Socket( AF_INET, SOCK_STREAM, 0 );
@@ -130,14 +135,39 @@ int main() {
             sleep( 1 );
             GreenPass newClientPass = createGreenPass( code );
             printf( "\nRichiesta client gestita risultato: %d\n", newClientPass.service );
+            
+            // Connesione con il serverV
+            printf( "\n---- CONNESSIONE SERVER V ----\n" );
+            // Creazione socket utilizzata per comunicare con il centro vaccinale
+            // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
+            sockfdSV = Socket( AF_INET, SOCK_STREAM, 0 );
+
+            // Impostazione degli indirizzi del server
+            addressSV.sin_family = AF_INET; // Dominio
+            inet_pton( AF_INET, LOCAL_HOST, &addressSV.sin_addr ); // Text to binary
+            addressSV.sin_port = htons( SERVERV_PORT ); // Host to network
+
+            // Stabilisco una connessione con il server
+            Connect( sockfdSV, ( struct sockaddr* ) &addressSV, sizeof( addressSV ) );
+
+            // Invio il codice attraverso la FullWrite
+            ssize_t nleftW = FullWrite( sockfdSV, &newClientPass, sizeof( newClientPass ) );
+            int response = 0;
+            // Risposta da parte del centro vaccinale utilizzando FullRead
+            ssize_t nleftR = FullRead( sockfdSV, &response, sizeof( response ) );
+            if ( response )
+                printf( "\n---- REGISTRAZIONE CONCLUSA CON SUCCESSO ----\n" );
+            else
+                printf( "\n---- REGISTRAZIONE CONCLUSA SENZA SUCCESSO ----\n" );
 
             // Invio la risposta
-            ssize_t nleftW = FullWrite( i, &newClientPass, sizeof( newClientPass ) );
+            nleftW = FullWrite( i, &newClientPass, sizeof( newClientPass ) );
         }
     }
 
     // Chiude il socket del server prima di uscire
     close( sockfd );
+    close( sockfdSV );
     return 0;
 }
 

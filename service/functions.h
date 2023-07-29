@@ -165,26 +165,3 @@ ssize_t FullRead( int fd, void *buf, size_t count ) {
     buf = 0;
     return nleft;
 }
-
-/**
- * Funzione per generare Green Pass nuovo
- * 
- * @param code: Codice fiscale cliente
- * @return newGreenPass: Nuovo Green Pass
- */
-GreenPass createGreenPass( const char code[] ) {
-    GreenPass newGreenPass;
-
-    // Copia il codice fornito nella struttura GreenPass
-    strncpy( newGreenPass.code, code, CODE_LENGTH - 1 );
-    newGreenPass.code[ CODE_LENGTH - 1 ] = '\0'; // Assicurati di terminare correttamente la stringa
-
-    // Imposta la data di validità da adesso fino a 6 mesi dopo
-    newGreenPass.valid_from = time( NULL );
-    newGreenPass.valid_until = newGreenPass.valid_from + VALIDITY_PERIOD;
-
-    // Service TRUE
-    newGreenPass.service = 1;
-
-    return newGreenPass;
-}
