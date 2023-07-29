@@ -16,7 +16,6 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 
-#define CODE_LENGTH 16
 #define MAX_NUM_OF_GREEN_PASS 120
 
 // e operazioni su questa variabile sono eseguite in modo atomico e
@@ -91,7 +90,7 @@ int main() {
         printf( "\nCodice Fiscale: %s", newGreenPass.code );
         printf( "\nData inizio: %s", ctime( &newGreenPass.valid_from ) );
         printf( "Data fine: %s", ctime( &newGreenPass.valid_until ) );
-        response = 1;
+        response = 1; // Simulazione
         addGreenPass( allGreenPass, newGreenPass, count );
         printf( "Green Pass Totali: %d\n", ++count + 1 );
 

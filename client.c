@@ -15,8 +15,6 @@
 #include "service/functions.h"
 #include "service/green_pass.h"
 
-#define CODE_LENGTH 16
-
 int main( int argc, char* argv[] ) {
 
     // Controllo effettuato per la verifica dei dati in input
@@ -38,8 +36,8 @@ int main( int argc, char* argv[] ) {
     GreenPass myGreenPass;
 
     // Copia la tessera sanitaria passata come argomento nel nostro array
-    strncpy( code, argv[1], CODE_LENGTH - 1 );
-    code[ CODE_LENGTH - 1 ] = '\0'; // Assicura che la stringa sia terminata correttamente
+    strncpy( code, argv[1], CODE_LENGTH );
+    code[ CODE_LENGTH ] = '\0'; // Assicura che la stringa sia terminata correttamente
 
     // Conversione caratteri del codice della tessera sanitaria in maiuscolo
     for ( int i = 0; code[i]; i++ ) {
@@ -66,21 +64,19 @@ int main( int argc, char* argv[] ) {
     ssize_t nleftR = FullRead( sockfd, &myGreenPass, sizeof( myGreenPass ) );
 
     // Green pass
-    if ( myGreenPass.service ) {
+    if ( myGreenPass.validity ) {
         printf( "\nAccettazione avvenuta con successo green pass:" );
         printf( "\nCodice Fiscale: %s", myGreenPass.code );
         printf( "\nData inizio: %s", ctime( &myGreenPass.valid_from ) );
         printf( "Data fine: %s", ctime( &myGreenPass.valid_until ) );
+        printf( "\n-------- TUTTE LE OPERAZIONI --------\n" );
+        printf( "---- SONO AVVENUTE CON SUCCESSO! ----\n" );
     } else {
         printf( "\nAccettazione fallita." );
     }
 
     // Chiusura descrittore
     close( sockfd );
-
-    printf( "\n-------- TUTTE LE OPERAZIONI --------\n" );
-    printf( "---- SONO AVVENUTE CON SUCCESSO! ----\n" );
-
     printf( "\n" );
     return 0;
 }

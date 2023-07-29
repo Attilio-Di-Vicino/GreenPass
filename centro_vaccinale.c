@@ -19,8 +19,6 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 
-#define CODE_LENGTH 16
-
 // e operazioni su questa variabile sono eseguite in modo atomico e
 // non vengono ottimizzate dal compilatore
 volatile sig_atomic_t run = 1;
@@ -39,19 +37,16 @@ int main() {
 
     // Descrittore del file socket
     int sockfd;
-    int connfd;
     // Struttura degli indirizzi
     struct sockaddr_in servaddr;
-    struct sockaddr_in clientaddr;
-    socklen_t clientaddrLength;
     // Codice tessera sanitaria
     char code[ CODE_LENGTH ];
     // Risposta dal centro vaccinale
     int response;
 
-    // Descrittore del file socket
+    // Descrittore del file socket server V
     int sockfdSV;
-    // Struttura degli indirizzi
+    // Struttura degli indirizzi server V
     struct sockaddr_in addressSV;
 
     // Creazione socket utilizzata per comunicare con il centro vaccinale
@@ -65,7 +60,7 @@ int main() {
 
     // Da valutare
     int optval = 1;
-    if ( setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof( optval ) ) < 0) {
+    if ( setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof( optval ) ) < 0 ) {
         perror( "setsockopt" );
         exit( EXIT_FAILURE );
     }
@@ -132,12 +127,12 @@ int main() {
                 }
             }
 
-            sleep( 1 );
+            sleep( 1 ); // Attesa di esempio
             GreenPass newClientPass = createGreenPass( code );
-            printf( "\nRichiesta client gestita risultato: %d\n", newClientPass.service );
+            printf( "\nRichiesta client gestita risultato: %d\n", newClientPass.validity );
             
             // Connesione con il serverV
-            printf( "\n---- CONNESSIONE SERVER V ----\n" );
+            printf( "\n----------- CONNESSIONE SERVER V ------------\n" );
             // Creazione socket utilizzata per comunicare con il centro vaccinale
             // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
             sockfdSV = Socket( AF_INET, SOCK_STREAM, 0 );
@@ -156,12 +151,13 @@ int main() {
             // Risposta da parte del centro vaccinale utilizzando FullRead
             ssize_t nleftR = FullRead( sockfdSV, &response, sizeof( response ) );
             if ( response )
-                printf( "\n---- REGISTRAZIONE CONCLUSA CON SUCCESSO ----\n" );
+                printf( "---- REGISTRAZIONE CONCLUSA CON SUCCESSO ----\n" );
             else
-                printf( "\n---- REGISTRAZIONE CONCLUSA SENZA SUCCESSO ----\n" );
+                printf( "---- REGISTRAZIONE CONCLUSA SENZA SUCCESSO ----\n" );
 
             // Invio la risposta
             nleftW = FullWrite( i, &newClientPass, sizeof( newClientPass ) );
+            printf( "------------ OPERAZIONI CONCLUSE -------------\n" );
         }
     }
 
