@@ -31,7 +31,7 @@ int getSizeAllGreenPass() {
  * 
  * @param code: Codice fiscale cliente
  * @return newGreenPass: Nuovo Green Pass
- */
+*/
 GreenPass createGreenPass( const char code[] ) {
     GreenPass newGreenPass;
     
@@ -52,9 +52,9 @@ GreenPass createGreenPass( const char code[] ) {
 
 /**
  * Procedura per inizializzazione Green Pass
- */
+*/
 void initAllGreenPass() {
-    // Vengono utilizzati 2 Green Pass di esempio
+    // Vengono utilizzati 3 Green Pass di esempio
 
     // Alessio Esposito
     strncpy( allGreenPass[0].code, "SPSLSS00A01F839A", CODE_LENGTH );
@@ -98,7 +98,7 @@ void initAllGreenPass() {
  * Procedura per aggiungere Green Pass
  * 
  * @param newGreenPass: Green Pass da aggiungere
- */
+*/
 void addGreenPass( GreenPass newGreenPass ) {
     strncpy( allGreenPass[ count ].code, newGreenPass.code, CODE_LENGTH );
     allGreenPass[ count ].code[ CODE_LENGTH ] = '\0'; // Assicurati di terminare correttamente la stringa
@@ -115,9 +115,9 @@ void addGreenPass( GreenPass newGreenPass ) {
 /**
  * Funzione controllo validità codice fiscale
  * 
- * @param greenPass: Green Pass da verificare
+ * @param code: code da verificare
  * @return validità del green pass
- */
+*/
 int checkValidity( char code[] ) {
     for ( int i = 0; i < count; i++ )
         if ( strcmp( code, allGreenPass[i].code ) == 0 )
@@ -125,6 +125,12 @@ int checkValidity( char code[] ) {
     return FLASE;
 }
 
+/**
+ * Procedura cambio validità
+ * 
+ * @param code: code
+ * @param chval: validità da inserire
+*/
 void changeValidity( char code[], int chval ) {
     for ( int i = 0; i < count; i++ )
         if ( strcmp( code, allGreenPass[i].code ) == 0 ) {
@@ -135,7 +141,7 @@ void changeValidity( char code[], int chval ) {
 
 /**
  * Procedura per stampare Green Pass
- */
+*/
 void printAllGreenPass() {
     for ( int i = 0; i < count; i++ ) {
         printf( "\nCodice Fiscale: %s", allGreenPass[i].code );
