@@ -86,7 +86,7 @@ int main() {
         connfd = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
 
         // Ricevo il newGreenPass dal centro vaccinale
-        ssize_t nread = FullRead( connfd, &todoHandle, sizeof( todoHandle ) );
+        FullRead( connfd, &todoHandle, sizeof( todoHandle ) );
         GreenPass greenPass = createGreenPass( todoHandle.code );
 
         // Connesione con il serverV
@@ -105,29 +105,30 @@ int main() {
 
         if ( strcmp( todoHandle.todo, INVALIDATE ) == 0 ) {
             // Invalidazione
-            strncpy( greenPass.toCheck, INVALIDATE, 3 );
+            strncpy( greenPass.toCheck, INVALIDATE, TODO_SIZE );
             printf( "Cambio di validità FALSE..." );
         } else if ( strcmp( todoHandle.todo, RESTORE ) == 0 ) {
             // Restore
-            strncpy( greenPass.toCheck, RESTORE, 3 );
+            strncpy( greenPass.toCheck, RESTORE, TODO_SIZE );
             printf( "Cambio di validità TRUE..." );
         } else {
             // Is valid
-            strncpy( greenPass.toCheck, ISVALID, 3 );
+            strncpy( greenPass.toCheck, ISVALID, TODO_SIZE );
             printf( "Verifica in corso..." );
         }
+        greenPass.toCheck[ TODO_SIZE ] = '\0';
 
         // Invio il codice attraverso la FullWrite
-        ssize_t nleftW = FullWrite( sockfdSV, &greenPass, sizeof( greenPass ) );
+        FullWrite( sockfdSV, &greenPass, sizeof( greenPass ) );
         response = 0;
         // Risposta da parte del centro vaccinale utilizzando FullRead
-        ssize_t nleftR = FullRead( sockfdSV, &response, sizeof( response ) );
+        FullRead( sockfdSV, &response, sizeof( response ) );
         close( sockfdSV );
         printf( "\nOperazione conclusa." );
         printf( "\n----------- CONNESSIONE CHIUSA V ------------\n" );
 
         // Invio la risposta
-        nleftW = FullWrite( connfd, &response, sizeof( response ) );
+        FullWrite( connfd, &response, sizeof( response ) );
         close( connfd );   
     }
 

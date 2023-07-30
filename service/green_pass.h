@@ -16,7 +16,7 @@ typedef struct green_pass {
     time_t valid_from;
     time_t valid_until;
     int validity;
-    char toCheck[3];
+    char toCheck[ TODO_SIZE ];
 } GreenPass;
 
 // Green Pass presenti

@@ -38,13 +38,11 @@ int main() {
 
     // Descrittore del file socket
     int sockfd;
-    int centerfd, connfd;
+    int connfd;
     // Struttura degli indirizzi
     struct sockaddr_in servaddr;
     struct sockaddr_in clientaddr;
     socklen_t clientaddrLength = sizeof( clientaddr );
-    struct sockaddr_in centeraddr;
-    socklen_t centeraddrLength = sizeof( centeraddr );
     // Nuovo GreenPass
     GreenPass newGreenPass;
     // Risposta dal centro vaccinale
@@ -83,7 +81,7 @@ int main() {
         connfd = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
 
         // Ricevo il newGreenPass dal centro vaccinale
-        ssize_t nread = FullRead( connfd, &newGreenPass, sizeof( newGreenPass ) );
+        FullRead( connfd, &newGreenPass, sizeof( newGreenPass ) );
 
         if ( strcmp( newGreenPass.toCheck, OTHER ) == 0 ) {
             // Green pass
@@ -113,7 +111,7 @@ int main() {
         }
 
         // Invio la risposta
-        ssize_t nleftW = FullWrite( connfd, &response, sizeof( response ) ); 
+        FullWrite( connfd, &response, sizeof( response ) ); 
         close( connfd );
     }
 

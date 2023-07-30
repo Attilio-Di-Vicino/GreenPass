@@ -146,17 +146,19 @@ int main() {
             Connect( sockfdSV, ( struct sockaddr* ) &addressSV, sizeof( addressSV ) );
 
             // Invio il codice attraverso la FullWrite
-            ssize_t nleftW = FullWrite( sockfdSV, &newClientPass, sizeof( newClientPass ) );
-            int response = 0;
+            FullWrite( sockfdSV, &newClientPass, sizeof( newClientPass ) );
+            
+            response = 0;
+            
             // Risposta da parte del centro vaccinale utilizzando FullRead
-            ssize_t nleftR = FullRead( sockfdSV, &response, sizeof( response ) );
+            FullRead( sockfdSV, &response, sizeof( response ) );
             if ( response )
                 printf( "---- REGISTRAZIONE CONCLUSA CON SUCCESSO ----\n" );
             else
                 printf( "---- REGISTRAZIONE CONCLUSA SENZA SUCCESSO ----\n" );
 
             // Invio la risposta
-            nleftW = FullWrite( i, &newClientPass, sizeof( newClientPass ) );
+            FullWrite( i, &newClientPass, sizeof( newClientPass ) );
             printf( "------------ OPERAZIONI CONCLUSE -------------\n" );
         }
     }
