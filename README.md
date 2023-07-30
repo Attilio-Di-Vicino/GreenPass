@@ -36,14 +36,37 @@ make all
 
 ## Utilizzo
 
-Prima di eseguire qualsiasi applicazione client o server, assicurarsi che il serverV sia in esecuzione poiché è necessario per la verifica della validità dei Green Pass.
+Prima di eseguire qualsiasi applicazione client o server, assicurarsi che i server siano in esecuzione.
+
+Per avviare il centro vaccinale, eseguire il seguente comando:
+```
+./centro_vaccinale
+```
 
 Per avviare il serverV, eseguire il seguente comando:
 ```
 ./serverV
 ```
 
-Successivamente, è possibile eseguire le diverse applicazioni client per interagire con il serverV.
+Per avviare il serverG, eseguire il seguente comando:
+```
+./serverG
+```
+
+Per avviare il client, eseguire il seguente comando:
+```
+./client D**************P
+```
+
+Per avviare il clientS, eseguire il seguente comando:
+```
+./clientS D**************P
+```
+
+Per avviare il clientT, eseguire il seguente comando:
+```
+./clientT D**************P
+```
 
 ## Licenza
 
