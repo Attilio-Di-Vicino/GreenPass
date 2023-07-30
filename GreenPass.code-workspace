@@ -10,7 +10,8 @@
 			"socket.h": "c",
 			"addresses.h": "c",
 			"signal.h": "c",
-			"green_pass.h": "c"
+			"green_pass.h": "c",
+			"todo.h": "c"
 		}
 	}
 }

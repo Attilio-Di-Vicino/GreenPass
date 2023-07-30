@@ -10,7 +10,7 @@
 
 typedef struct toDo {
     char code[ 17 ];
-    char todo[ 3 ];
+    char todo[ 4 ];
 } todo;
 
 #endif // TODO_H

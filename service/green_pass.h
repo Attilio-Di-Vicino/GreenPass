@@ -9,6 +9,7 @@
 #define MAX_NUM_OF_GREEN_PASS 120
 #define FLASE 0
 #define TRUE 1
+#define TODO_SIZE 4
 
 typedef struct green_pass {
     char code[ CODE_LENGTH ];
@@ -45,7 +46,8 @@ GreenPass createGreenPass( const char code[] ) {
 
     // validity TRUE
     newGreenPass.validity = TRUE;
-    strncpy( newGreenPass.toCheck, OTHER, 3 );
+    strncpy( newGreenPass.toCheck, OTHER, TODO_SIZE );
+    newGreenPass.toCheck[ TODO_SIZE ] = '\0';
 
     return newGreenPass;
 }
@@ -66,7 +68,8 @@ void initAllGreenPass() {
 
     // validity TRUE
     allGreenPass[0].validity = TRUE;
-    strncpy( allGreenPass[0].toCheck, OTHER, 3 );
+    strncpy( allGreenPass[0].toCheck, OTHER, TODO_SIZE );
+    allGreenPass[0].toCheck[ TODO_SIZE ] = '\0';
 
     // Angela Esposito
     strncpy( allGreenPass[1].code, "SPSNGL01A41F839D", CODE_LENGTH );
@@ -78,7 +81,8 @@ void initAllGreenPass() {
 
     // validity TRUE
     allGreenPass[1].validity = TRUE;
-    strncpy( allGreenPass[1].toCheck, OTHER, 3 );
+    strncpy( allGreenPass[1].toCheck, OTHER, TODO_SIZE );
+    allGreenPass[1].toCheck[ TODO_SIZE ] = '\0';
 
     // Attilio Di Vicino
     strncpy( allGreenPass[2].code, "DVCTTL97T30F839P", CODE_LENGTH );
@@ -90,7 +94,8 @@ void initAllGreenPass() {
 
     // validity TRUE
     allGreenPass[2].validity = TRUE;
-    strncpy( allGreenPass[2].toCheck, OTHER, 3 );
+    strncpy( allGreenPass[2].toCheck, OTHER, TODO_SIZE );
+    allGreenPass[2].toCheck[ TODO_SIZE ] = '\0';
     count = 3;
 }
 
@@ -109,7 +114,8 @@ void addGreenPass( GreenPass newGreenPass ) {
 
     // validity TRUE
     allGreenPass[ count ].validity = newGreenPass.validity;
-    strncpy( allGreenPass[ count++ ].toCheck, OTHER, 3 );
+    strncpy( allGreenPass[ count ].toCheck, OTHER, TODO_SIZE );
+    allGreenPass[ count++ ].toCheck[ TODO_SIZE ] = '\0';
 }
 
 /**

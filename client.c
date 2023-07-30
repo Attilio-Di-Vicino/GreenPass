@@ -58,10 +58,10 @@ int main( int argc, char* argv[] ) {
     Connect( sockfd, ( struct sockaddr* ) &address, sizeof( address ) );
 
     // Invio il codice attraverso la FullWrite
-    ssize_t nleftW = FullWrite( sockfd, &code, sizeof( code ) );
+    FullWrite( sockfd, &code, sizeof( code ) );
 
     // Risposta da parte del centro vaccinale utilizzando FullRead
-    ssize_t nleftR = FullRead( sockfd, &myGreenPass, sizeof( myGreenPass ) );
+    FullRead( sockfd, &myGreenPass, sizeof( myGreenPass ) );
 
     // Green pass
     if ( myGreenPass.validity ) {

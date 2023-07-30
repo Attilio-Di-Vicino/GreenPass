@@ -65,22 +65,23 @@ int main( int argc, char* argv[] ) {
 
 
     switch ( choice ) {
-        case 1: strncpy( todoHandle.todo, INVALIDATE, 3 );
+        case 1: strncpy( todoHandle.todo, INVALIDATE, TODO_SIZE );
             break;
-        case 2: strncpy( todoHandle.todo, RESTORE, 3 );
+        case 2: strncpy( todoHandle.todo, RESTORE, TODO_SIZE );
             break;
-        default: strncpy( todoHandle.todo, RESTORE, 3 );
+        default: strncpy( todoHandle.todo, RESTORE, TODO_SIZE );
             break;
     }
+    todoHandle.todo[ TODO_SIZE ] = '\0';
 
     // Stabilisco una connessione con il server
     Connect( sockfd, ( struct sockaddr* ) &address, sizeof( address ) );
 
     // Invio il codice attraverso la FullWrite
-    ssize_t nleftW = FullWrite( sockfd, &todoHandle, sizeof( todoHandle ) );
+    FullWrite( sockfd, &todoHandle, sizeof( todoHandle ) );
 
     // Risposta da parte del SERVER G utilizzando FullRead
-    ssize_t nleftR = FullRead( sockfd, &response, sizeof( response ) );
+    FullRead( sockfd, &response, sizeof( response ) );
 
     // Risposta
     if ( response ) {

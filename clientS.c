@@ -46,7 +46,8 @@ int main( int argc, char* argv[] ) {
         todoHandle.code[i] = toupper( todoHandle.code[i] );
     }
     printf( "\nTessera Sanitaria CF: %s in verifica di validità...\n", todoHandle.code );
-    strncpy( todoHandle.todo, ISVALID, 3 );
+    strncpy( todoHandle.todo, ISVALID, TODO_SIZE );
+    todoHandle.todo[ TODO_SIZE ] = '\0';
 
     // Creazione socket utilizzata per comunicare con il server
     // Per la comunicazione viene utilizzato un dominio AF_INET e protocollo TCP
@@ -61,10 +62,10 @@ int main( int argc, char* argv[] ) {
     Connect( sockfd, ( struct sockaddr* ) &address, sizeof( address ) );
 
     // Invio il codice attraverso la FullWrite
-    ssize_t nleftW = FullWrite( sockfd, &todoHandle, sizeof( todoHandle ) );
+    FullWrite( sockfd, &todoHandle, sizeof( todoHandle ) );
 
     // Risposta da parte del SERVER G utilizzando FullRead
-    ssize_t nleftR = FullRead( sockfd, &response, sizeof( response ) );
+    FullRead( sockfd, &response, sizeof( response ) );
 
     // Risposta
     if ( response ) {
