@@ -108,6 +108,8 @@ int main() {
         while ( fd_ready != 0 ) {
             
             i++;
+
+            // Se è zero, vai al prossimo
             if ( fd_open[i] == 0 )
                 continue;
 
@@ -119,6 +121,8 @@ int main() {
                     perror( "\nErrore nella lettura" );
                 if ( nread == 0 ) {
                     fd_open[i] = 0;
+
+                    // Se ho raggiunto il maxfd devo trovare il nuovo
                     if ( maxfd == i ) {
                         while ( fd_open[ --i ] == 0 );
                         maxfd = i;
@@ -127,7 +131,6 @@ int main() {
                 }
             }
 
-            sleep( 1 ); // Attesa di esempio
             GreenPass newClientPass = createGreenPass( code );
             printf( "\nRichiesta client gestita risultato: %d\n", newClientPass.validity );
             
@@ -148,7 +151,7 @@ int main() {
             // Invio il codice attraverso la FullWrite
             FullWrite( sockfdSV, &newClientPass, sizeof( newClientPass ) );
             
-            response = 0;
+            response = FLASE;
             
             // Risposta da parte del centro vaccinale utilizzando FullRead
             FullRead( sockfdSV, &response, sizeof( response ) );
@@ -157,15 +160,17 @@ int main() {
             else
                 printf( "---- REGISTRAZIONE CONCLUSA SENZA SUCCESSO ----\n" );
 
+            close( sockfdSV ); // Chiudo il fd del sevrer V
+
             // Invio la risposta
             FullWrite( i, &newClientPass, sizeof( newClientPass ) );
             printf( "------------ OPERAZIONI CONCLUSE -------------\n" );
+            // close( i ); // Chiudo il canale con il client appena servito
         }
     }
 
     // Chiude il socket del server prima di uscire
     close( sockfd );
-    close( sockfdSV );
     return 0;
 }
 

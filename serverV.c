@@ -38,7 +38,6 @@ int main() {
 
     // Descrittore del file socket
     int sockfd;
-    int connfd;
     // Struttura degli indirizzi
     struct sockaddr_in servaddr;
     struct sockaddr_in clientaddr;
@@ -73,46 +72,97 @@ int main() {
     // Mette in ascolto un socket TCP per le connessioni in entrata
     Listen( sockfd, SOMAXCONN );
 
+    // FD_SET
+    fd_set readSet;
+    FD_ZERO( &readSet );
+    int i, fd_connection, fd_open[ FD_SETSIZE ] = {0};
+    int fd_ready = 0;
+    ssize_t nread = 0;
+    int maxfd = 0;
+
+    fd_open[ sockfd ]++;
+    maxfd = sockfd;
+
     printf( "\n---- SERVER V IN ASCOLTO ----\n" );
 
     while ( run ) {
 
-        // Accettazione della connessione da un client
-        connfd = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
+        for ( i = sockfd; i <= maxfd; i++ )
+            if ( fd_open[i] != 0 )
+                FD_SET( i, &readSet );
 
-        // Ricevo il newGreenPass dal centro vaccinale
-        FullRead( connfd, &newGreenPass, sizeof( newGreenPass ) );
+        // Monitoro i file descriptor ed n è il numero di fd pronti
+        fd_ready = Select( maxfd + 1, &readSet, NULL, NULL, NULL );
 
-        if ( strcmp( newGreenPass.toCheck, OTHER ) == 0 ) {
-            // Green pass
-            printf( "\nGreen Pass ricevuto con successo green pass:" );
-            printf( "\nCodice Fiscale: %s", newGreenPass.code );
-            printf( "\nData inizio: %s", ctime( &newGreenPass.valid_from ) );
-            printf( "Data fine: %s", ctime( &newGreenPass.valid_until ) );
-            response = 1; // Simulazione
-            addGreenPass( newGreenPass );
-            printf( "Green Pass Totali: %d\n", getSizeAllGreenPass() );
-        } else {
-            printf( "\nGestione richiesta dal server G..." );
-            printf( "\nOperazione conclusa.\n" );
-            // Controlla
-            if ( strcmp( newGreenPass.toCheck, INVALIDATE ) == 0 ) {
-                // Invalidazione
-                changeValidity( newGreenPass.code, FLASE );
-                response = TRUE;
-            } else if ( strcmp( newGreenPass.toCheck, RESTORE ) == 0 ) {
-                // Restore
-                changeValidity( newGreenPass.code, TRUE );
-                response = TRUE;
-            } else {
-                // Is valid
-                response = checkValidity( newGreenPass.code );
-            }
+        if ( FD_ISSET( sockfd, &readSet ) ) {
+            fd_ready--;
+            // Accettazione della connessione da un client
+            fd_connection = Accept( sockfd, ( struct sockaddr* ) &clientaddr, &clientaddrLength );
+            printf( "\nConnessione stabilita con %d...", fd_connection );
+            fd_open[ fd_connection ] = 1;
+            if ( maxfd < fd_connection )
+                maxfd = fd_connection;
         }
 
-        // Invio la risposta
-        FullWrite( connfd, &response, sizeof( response ) ); 
-        close( connfd );
+        i = sockfd;
+
+        while ( fd_ready != 0 ) {
+            
+            i++;
+
+            // Se è zero, vai al prossimo
+            if ( fd_open[i] == 0 )
+                continue;
+
+            if ( FD_ISSET( i, &readSet ) ) {
+                fd_ready--;
+                // Ricevo il codice dal client
+                nread = FullRead( i, &newGreenPass, sizeof( newGreenPass ) );
+                if ( nread < 0 )
+                    perror( "\nErrore nella lettura" );
+                if ( nread == 0 ) {
+                    fd_open[i] = 0;
+
+                    // Se ho raggiunto il maxfd devo trovare il nuovo
+                    if ( maxfd == i ) {
+                        while ( fd_open[ --i ] == 0 );
+                        maxfd = i;
+                        break;
+                    }
+                }
+            }
+
+            if ( strcmp( newGreenPass.toCheck, OTHER ) == 0 ) {
+                // Green pass
+                printf( "\nGestione richiesta dal centro vaccinale..." );
+                printf( "\nGreen Pass ricevuto con successo, green pass:" );
+                printf( "\nCodice Fiscale: %s", newGreenPass.code );
+                printf( "\nData inizio: %s", ctime( &newGreenPass.valid_from ) );
+                printf( "Data fine: %s", ctime( &newGreenPass.valid_until ) );
+                response = TRUE; // Simulazione
+                addGreenPass( newGreenPass );
+                printf( "Green Pass Totali: %d\n", getSizeAllGreenPass() );
+            } else {
+                printf( "\nGestione richiesta dal server G..." );
+                printf( "\nOperazione conclusa.\n" );
+                // Controlla
+                if ( strcmp( newGreenPass.toCheck, INVALIDATE ) == 0 ) {
+                    // Invalidazione
+                    changeValidity( newGreenPass.code, FLASE );
+                    response = TRUE;
+                } else if ( strcmp( newGreenPass.toCheck, RESTORE ) == 0 ) {
+                    // Restore
+                    changeValidity( newGreenPass.code, TRUE );
+                    response = TRUE;
+                } else {
+                    // Is valid
+                    response = checkValidity( newGreenPass.code );
+                }
+            }
+
+            // Invio la risposta
+            FullWrite( i, &response, sizeof( response ) );
+        }
     }
 
     // Chiude il socket del server prima di uscire
