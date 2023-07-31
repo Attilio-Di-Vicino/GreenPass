@@ -37,7 +37,7 @@ int main( int argc, char* argv[] ) {
     // Risposta
     int response = FLASE;
 
-    // Copia la tessera sanitaria passata come argomento nel nostro array
+    // Copia la tessera sanitaria passata come argomento nell'array code
     strncpy( todoHandle.code, argv[1], CODE_LENGTH );
     todoHandle.code[ CODE_LENGTH ] = '\0'; // Assicura che la stringa sia terminata correttamente
 

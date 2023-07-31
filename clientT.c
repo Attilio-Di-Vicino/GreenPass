@@ -38,7 +38,7 @@ int main( int argc, char* argv[] ) {
     int response = FLASE;
     int choice;
 
-    // Copia la tessera sanitaria passata come argomento nel nostro array
+    // Copia la tessera sanitaria passata come argomento nell'array code
     strncpy( todoHandle.code, argv[1], CODE_LENGTH );
     todoHandle.code[ CODE_LENGTH ] = '\0'; // Assicura che la stringa sia terminata correttamente
 
@@ -57,13 +57,16 @@ int main( int argc, char* argv[] ) {
     inet_pton( AF_INET, LOCAL_HOST, &address.sin_addr ); // Text to binary
     address.sin_port = htons( SERVERG_PORT ); // Host to network
 
+    // Il clienT ha la possibilità di inavlidare
+    // o ripristinare il suo green pass
     printf( "\n---- MENU ----" );
     printf( "\n1. Invalida il tuo Green Pass" );
     printf( "\n2. Ripristina il tuo Green Pass" );
     printf( "\nInserisci la tua scelta: " );
     scanf( "%d", &choice );
 
-
+    // Imposto todo con la scelta del clientT
+    // di default imposto un ripristino
     switch ( choice ) {
         case 1: strncpy( todoHandle.todo, INVALIDATE, TODO_SIZE );
             break;
@@ -89,6 +92,7 @@ int main( int argc, char* argv[] ) {
         printf( "\n-------- TUTTE LE OPERAZIONI --------\n" );
         printf( "---- SONO AVVENUTE CON SUCCESSO! ----\n" );
     } else {
+        printf( "\nOperazioni fallite." );
         printf( "\n------ OPERAZIONI TERMINATE -------\n" );
     }
 
